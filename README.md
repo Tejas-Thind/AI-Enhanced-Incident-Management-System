@@ -54,7 +54,7 @@ This assumes the Rails server is running on `http://localhost:3000`. You can con
 ## Decisions Made
 
 - **In-memory Session Caching:** Chose to keep chat context in memory per user instead of a database to improve speed and simplify architecture.
-- **No Database for Suggestions:** Disabled persistent storage for suggestions to focus on real-time processing and reduce complexity.
+- **No Database for Suggestions:** Disabled persistent storage for suggestions to focus on real-time processing and reduce complexity for the scope of this assignment.
 - **Categorized Suggestions:** Implemented six detailed categories to help users filter and focus on relevant incident information.
 - **Separate Frontend and Backend:** Used Rails API backend and React frontend (Vite/Next.js) for modularity and scalability.
 - **OpenAI GPT-4o-mini:** Selected for its balance of speed and response quality in generating incident suggestions.
