@@ -1,6 +1,7 @@
 # Incident Suggestions Assistant
 
 This project simulates a real-time incident replay system where each message from a transcript is analyzed by an AI assistant (via OpenAI) to extract actionable suggestions.
+
 ---
 
 ## 🚀 How to Start the Server
