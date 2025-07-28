@@ -119,40 +119,6 @@ The frontend is configured to connect to the Rails backend:
 - **Endpoints**: Uses `/api/messages` for AI suggestions
 - **Session**: Maintains `user_id: 'incident_replay_user'` for context
 
-### Customization
-
-#### Transcript Data
-
-Edit `src/data/incidentTranscript.js` to change the incident transcript:
-
-```javascript
-export const incidentTranscript = {
-  meeting_transcript: [
-    {
-      speaker: "username",
-      text: "Your message here",
-    },
-    // ... more messages
-  ],
-};
-```
-
-#### Styling
-
-Modify `tailwind.config.js` to customize colors and animations:
-
-```javascript
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        // Your custom colors
-      },
-    },
-  },
-};
-```
-
 ## 🎮 Usage
 
 ### Basic Controls
