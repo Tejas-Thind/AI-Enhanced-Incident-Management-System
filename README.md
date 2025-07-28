@@ -44,10 +44,10 @@ This assumes the Rails server is running on `http://localhost:3000`. You can con
 - Watch messages appear on the left and suggestions update dynamically on the right.
 - The backend uses OpenAI to analyze the message for:
   - Action Items
-  - Timeline Events
   - Root Cause Signals
   - Metadata Hints
-  - Follow-up Tasks (after the incident is over)
+  - Timeline Events
+  - Follow-up Tasks (tasks to be done after the incident)
 
 Responses are categorized and rendered inline as each message appears.
 
