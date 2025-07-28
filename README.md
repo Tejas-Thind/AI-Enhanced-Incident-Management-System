@@ -8,10 +8,9 @@ This project simulates a real-time incident replay system where each message fro
 
 ### 1. Backend (Rails)
 
-cd rails_api
-bundle install
-rails server
-
+cd rails_api  
+bundle install  
+rails server  
 
 You’ll also need to add your OpenAI key in a `.env` file at the root of your Rails app `rails_api/`:
 
@@ -24,9 +23,9 @@ Make sure you have `dotenv-rails` in your Gemfile.
 
 ### 2. Frontend
 
-cd frontend
-npm install
-npm start
+cd frontend  
+npm install  
+npm start  
 
 
 This assumes the Rails server is running on `http://localhost:3000`. You can configure CORS in `config/initializers/cors.rb` if needed.
