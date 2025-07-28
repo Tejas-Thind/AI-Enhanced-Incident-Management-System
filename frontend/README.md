@@ -160,14 +160,13 @@ module.exports = {
 1. **Start Replay**: Click the play button to begin
 2. **Pause**: Click pause to stop at any point
 3. **Reset**: Click reset to start over
-4. **Progress**: Watch the progress bar and message counter
+4. **Progress**: Watch the suggestions counter
 
 ### Understanding the Interface
 
 - **Left Panel**: Live transcript with speaker avatars and timestamps
 - **Right Panel**: AI suggestions with category badges and reasoning
-- **Header**: Overall progress and participant count
-- **Bottom**: Playback controls and status
+- **Header**: Overall suggestions counter and playback controls
 
 ### Reading Suggestions
 
@@ -178,108 +177,3 @@ Each suggestion card shows:
 - **Reasoning**: Why this suggestion was generated
 - **Original Message**: Context from the transcript
 - **Timestamp**: When it was generated
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-**Backend Connection Error**
-
-- Ensure Rails server is running on port 3000
-- Check that `/api/messages` endpoint is working
-- Verify CORS is configured properly
-
-**No Suggestions Appearing**
-
-- Check browser console for API errors
-- Verify OpenAI API key is set in backend
-- Ensure backend is processing requests
-
-**Replay Not Starting**
-
-- Check that all dependencies are installed
-- Verify React development server is running
-- Check browser console for JavaScript errors
-
-### Development Tips
-
-**Hot Reload**
-
-- Changes to components will auto-reload
-- Check browser console for warnings
-
-**API Testing**
-
-- Use browser dev tools to monitor network requests
-- Check Rails logs for backend errors
-
-**Styling**
-
-- Tailwind classes are available throughout
-- Custom CSS in `src/index.css`
-
-## 🚀 Production Build
-
-To build for production:
-
-```bash
-npm run build
-```
-
-This creates an optimized build in the `build/` directory.
-
-## 📝 API Integration
-
-The frontend expects the backend to:
-
-1. **Accept POST requests** to `/api/messages`
-2. **Return JSON** with suggestion data
-3. **Handle session context** for better AI responses
-4. **Support CORS** for cross-origin requests
-
-Example API call:
-
-```javascript
-fetch("/api/messages", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    content: "Database server crashed",
-    index: 1,
-    user_id: "incident_replay_user",
-  }),
-});
-```
-
-Expected response:
-
-```json
-{
-  "success": true,
-  "suggestion": {
-    "content": "Restart the database service",
-    "category": "Action_Item",
-    "reasoning": "Immediate action required",
-    "index": 1,
-    "timestamp": "2024-01-15T10:30:00Z"
-  }
-}
-```
-
-## 🎉 Success Indicators
-
-✅ **Working Frontend:**
-
-- Messages appear in real-time
-- AI suggestions populate the timeline
-- Controls respond to user input
-- Progress indicators update smoothly
-
-✅ **Backend Integration:**
-
-- API calls succeed without errors
-- Suggestions appear with proper categorization
-- Session context is maintained
-- Error handling works gracefully
-
-This creates a polished, professional incident replay tool that demonstrates real-time AI integration! 🚀
