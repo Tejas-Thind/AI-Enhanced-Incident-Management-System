@@ -91,76 +91,7 @@ Process a message and generate AI suggestions with session caching.
   }
 }
 ```
-
-### GET /api/messages/context
-
-Get the chat context for a user (for debugging).
-
-**Request:**
-
-```
-GET /api/messages/context?user_id=user123
-```
-
-**Response:**
-
-```json
-{
-  "user_id": "user123",
-  "chat_context": [
-    {
-      "role": "user",
-      "content": "Database server is down"
-    },
-    {
-      "role": "assistant",
-      "content": "Generated suggestion: Restart the database service (Category: Action_Item)"
-    }
-  ]
-}
-```
-
-### DELETE /api/messages/context
-
-Clear the chat context for a user.
-
-**Request:**
-
-```
-DELETE /api/messages/context?user_id=user123
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Chat context cleared for user: user123"
-}
-```
-
-### GET /api/suggestions
-
-Retrieve all suggestions from database (if using database storage).
-
-**Response:**
-
-```json
-{
-  "suggestions": [
-    {
-      "id": 1,
-      "content": "Investigate high CPU usage on database server",
-      "kind": "action_item",
-      "reasoning": "The message indicates a database server failure due to high CPU usage",
-      "message_index": 1,
-      "created_at": "2024-01-15T10:30:00Z",
-      "updated_at": "2024-01-15T10:30:00Z"
-    }
-  ]
-}
-```
-
+  
 ## Incident Response Categories
 
 The AI now classifies messages into six detailed categories:
@@ -174,7 +105,7 @@ The AI now classifies messages into six detailed categories:
 
 ## Session Caching
 
-The API now includes **in-memory session caching** that works like your friend's implementation:
+The API now includes **in-memory session caching**:
 
 ### How It Works
 
@@ -205,30 +136,6 @@ SessionCacheService.add_message(user_id, 'assistant', 'Generated suggestion: ...
 - **No Database**: Pure in-memory caching for speed
 - **Per-User Sessions**: Each user has independent context
 - **Easy to Clear**: Reset context when needed
-
-## Models
-
-### Suggestion (Database Model - Currently Disabled)
-
-```ruby
-class Suggestion < ApplicationRecord
-  validates :content, presence: true
-  validates :kind, presence: true
-  validates :message_index, presence: true, numericality: { only_integer: true }
-
-  KINDS = %w[action_item timeline_event root_cause metadata].freeze
-  validates :kind, inclusion: { in: KINDS }
-
-  scope :ordered_by_index, -> { order(:message_index) }
-end
-```
-
-**Note**: Database operations are currently commented out. To re-enable:
-
-1. Uncomment the database code in `MessagesController#create`
-2. Run `rails db:create` and `rails db:migrate`
-
-## Services
 
 ### OpenAiService
 
@@ -272,96 +179,3 @@ context = SessionCacheService.get_context(user_id)
 # Clear context
 SessionCacheService.clear_context(user_id)
 ```
-
-## Testing
-
-### Using curl
-
-```bash
-# Test POST /api/messages with session caching
-curl -X POST http://localhost:3000/api/messages \
-  -H "Content-Type: application/json" \
-  -d '{"content": "Database server down", "index": 1, "user_id": "user123"}'
-
-# Get chat context
-curl "http://localhost:3000/api/messages/context?user_id=user123"
-
-# Clear chat context
-curl -X DELETE "http://localhost:3000/api/messages/context?user_id=user123"
-```
-
-### Using the test script
-
-```bash
-ruby test_session.rb
-```
-
-## Development
-
-### Running Tests
-
-```bash
-rails test
-```
-
-### Database Commands (if using database)
-
-```bash
-rails db:create    # Create database
-rails db:migrate   # Run migrations
-rails db:seed      # Seed data
-rails db:reset     # Reset database
-```
-
-### Routes
-
-```bash
-rails routes
-```
-
-### Setup Script
-
-```bash
-ruby setup.rb      # Interactive setup and testing
-```
-
-## Troubleshooting
-
-### OpenAI API Issues
-
-- Ensure your API key is valid and has sufficient credits
-- Check the logs for detailed error messages
-- Verify the API key is set in your `.env` file
-- Test the connection using the setup script: `ruby setup.rb`
-
-### Session Caching Issues
-
-- **Context not persisting**: Check that you're using the same `user_id`
-- **Memory usage**: Context is stored in memory, restart server to clear all
-- **Multiple users**: Each `user_id` gets independent context
-
-### Database Migration Issues
-
-If you decide to re-enable database storage:
-
-1. **Reset the database**:
-
-   ```bash
-   rails db:drop
-   rails db:create
-   rails db:migrate
-   ```
-
-2. **Uncomment database code** in `MessagesController#create`
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
