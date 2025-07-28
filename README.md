@@ -60,7 +60,7 @@ This assumes the Rails server is running on `http://localhost:3000`. You can con
 
 ## Future Improvements (If I Had More Time)
 
-- **User-Uploaded JSON Transcripts:** Allow users to upload their own transcript files and manage multiple transcript sessions separately.
+- **User-Uploaded JSON Transcripts:** Allow users to upload their transcript files in JSON and manage multiple transcript sessions separately.
 - **Database Integration:** Incorporate PostgreSQL to persist messages, suggestions, and user sessions for better data management and historical analysis.
 - **Incident AI Chatbot:** Enable an interactive chatbot feature so users can ask questions and receive AI insights based on the full incident context.
 - **Timeline Visualization:** Develop a visual timeline component showing key incident events, helping users quickly understand the incident flow and important milestones.
