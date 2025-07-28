@@ -137,23 +137,6 @@ SessionCacheService.add_message(user_id, 'assistant', 'Generated suggestion: ...
 - **Per-User Sessions**: Each user has independent context
 - **Easy to Clear**: Reset context when needed
 
-## Models
-
-### Suggestion (Database Model - Currently Disabled)
-
-```ruby
-class Suggestion < ApplicationRecord
-  validates :content, presence: true
-  validates :kind, presence: true
-  validates :message_index, presence: true, numericality: { only_integer: true }
-
-  KINDS = %w[action_item timeline_event root_cause metadata].freeze
-  validates :kind, inclusion: { in: KINDS }
-
-  scope :ordered_by_index, -> { order(:message_index) }
-end
-```
-
 ### OpenAiService
 
 Handles communication with OpenAI's API to generate suggestions with chat context.
