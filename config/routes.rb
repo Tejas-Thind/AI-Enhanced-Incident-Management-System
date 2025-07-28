@@ -8,6 +8,9 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     post 'messages', to: 'messages#create'
+    get 'messages/context', to: 'messages#context'
+    delete 'messages/context', to: 'messages#clear_context'
+    get 'messages/debug_context', to: 'messages#debug_context'
     get 'suggestions', to: 'suggestions#index'
   end
 

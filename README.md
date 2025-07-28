@@ -1,6 +1,6 @@
 # Incident Suggestions Assistant API
 
-A Ruby on Rails API backend for an AI-enhanced incident management system that generates intelligent suggestions from incident messages.
+A Ruby on Rails API backend for an AI-enhanced incident management system that generates intelligent suggestions from incident messages with **in-memory session caching**.
 
 ## Features
 
@@ -8,6 +8,9 @@ A Ruby on Rails API backend for an AI-enhanced incident management system that g
 - **OpenAI Integration**: Uses GPT-4o-mini to analyze incident messages and extract suggestions
 - **RESTful API**: Provides endpoints for processing messages and retrieving suggestions
 - **CORS Support**: Configured for cross-origin requests
+- **Session Caching**: In-memory chat context per user (no database required)
+- **Real-time Processing**: Direct OpenAI response without database storage
+- **Advanced Classification**: Six detailed categories for incident response
 
 ## Quick Setup
 
@@ -15,7 +18,6 @@ A Ruby on Rails API backend for an AI-enhanced incident management system that g
 
 - Ruby 3.4+
 - Rails 8.0.2+
-- PostgreSQL
 - OpenAI API key
 
 ### Installation
@@ -53,18 +55,7 @@ A Ruby on Rails API backend for an AI-enhanced incident management system that g
    OPENAI_API_KEY=your_actual_api_key_here
    ```
 
-5. **Database Setup**
-
-   **Note**: This project uses PostgreSQL to avoid SQLite3 compatibility issues on Windows.
-
-   ```bash
-   # Install PostgreSQL if not already installed
-   # Then run:
-   rails db:create
-   rails db:migrate
-   ```
-
-6. **Start the server**
+5. **Start the server**
    ```bash
    rails server
    ```
@@ -73,14 +64,15 @@ A Ruby on Rails API backend for an AI-enhanced incident management system that g
 
 ### POST /api/messages
 
-Process a message and generate AI suggestions.
+Process a message and generate AI suggestions with session caching.
 
 **Request:**
 
 ```json
 {
   "content": "The database server went down at 2:30 PM due to high CPU usage",
-  "index": 1
+  "index": 1,
+  "user_id": "user123"
 }
 ```
 
@@ -90,19 +82,66 @@ Process a message and generate AI suggestions.
 {
   "success": true,
   "suggestion": {
-    "id": 1,
-    "content": "Investigate high CPU usage on database server",
+    "content": "Restart the database service and investigate high CPU usage",
     "kind": "action_item",
-    "reasoning": "The message indicates a database server failure due to high CPU usage, which requires immediate investigation",
-    "message_index": 1,
-    "created_at": "2024-01-15T10:30:00Z"
+    "category": "Action_Item",
+    "reasoning": "The message indicates an immediate database failure that requires immediate action to restore service",
+    "index": 1,
+    "timestamp": "2024-01-15T10:30:00Z"
   }
+}
+```
+
+### GET /api/messages/context
+
+Get the chat context for a user (for debugging).
+
+**Request:**
+
+```
+GET /api/messages/context?user_id=user123
+```
+
+**Response:**
+
+```json
+{
+  "user_id": "user123",
+  "chat_context": [
+    {
+      "role": "user",
+      "content": "Database server is down"
+    },
+    {
+      "role": "assistant",
+      "content": "Generated suggestion: Restart the database service (Category: Action_Item)"
+    }
+  ]
+}
+```
+
+### DELETE /api/messages/context
+
+Clear the chat context for a user.
+
+**Request:**
+
+```
+DELETE /api/messages/context?user_id=user123
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Chat context cleared for user: user123"
 }
 ```
 
 ### GET /api/suggestions
 
-Retrieve all suggestions ordered by message index.
+Retrieve all suggestions from database (if using database storage).
 
 **Response:**
 
@@ -122,18 +161,54 @@ Retrieve all suggestions ordered by message index.
 }
 ```
 
-## Suggestion Types
+## Incident Response Categories
 
-The AI can extract the following types of suggestions:
+The AI now classifies messages into six detailed categories:
 
-- **action_item**: A specific action that needs to be taken
-- **timeline_event**: A chronological event or milestone
-- **root_cause**: An underlying cause of the incident
-- **metadata**: Additional information or context about the incident
+- **Action_Item**: An immediate action that should be taken during the incident to mitigate or resolve it
+- **Follow_Up**: A task to complete after the incident, such as reviews, documentation, or cleanup
+- **Timeline_Event**: An update marking important incident milestones, status changes, or resolutions
+- **Root_Cause_Signal**: A hypothesis or indicator pointing to the incident's underlying cause
+- **Metadata**: Additional contextual information like affected systems, severity, or incident scope
+- **None**: If none of the above categories apply
+
+## Session Caching
+
+The API now includes **in-memory session caching** that works like your friend's implementation:
+
+### How It Works
+
+1. **User sends message**: `chat_context << { role: "user", content: user_text }`
+2. **Call OpenAI**: With full chat context for better responses
+3. **Store response**: `chat_context << { role: "assistant", content: response_content }`
+4. **Cache per user**: Each user gets their own session context
+
+### Example Flow
+
+```ruby
+# First message from user
+chat_context = SessionCacheService.add_message(user_id, 'user', 'Database server is down')
+# chat_context now contains: [{ role: 'user', content: 'Database server is down' }]
+
+# Call OpenAI with context
+suggestion = OpenAiService.new.generate_suggestion(content, index, chat_context)
+
+# Store assistant response
+SessionCacheService.add_message(user_id, 'assistant', 'Generated suggestion: ...')
+# chat_context now contains both user and assistant messages
+```
+
+### Benefits
+
+- **Context Awareness**: AI gets full conversation history
+- **Better Responses**: More coherent suggestions based on previous messages
+- **No Database**: Pure in-memory caching for speed
+- **Per-User Sessions**: Each user has independent context
+- **Easy to Clear**: Reset context when needed
 
 ## Models
 
-### Suggestion
+### Suggestion (Database Model - Currently Disabled)
 
 ```ruby
 class Suggestion < ApplicationRecord
@@ -148,48 +223,77 @@ class Suggestion < ApplicationRecord
 end
 ```
 
-**Fields:**
+**Note**: Database operations are currently commented out. To re-enable:
 
-- `content` (string): The extracted suggestion content
-- `kind` (string): The type of suggestion (action_item, timeline_event, root_cause, metadata)
-- `reasoning` (text): AI's reasoning for extracting this suggestion
-- `message_index` (integer): The index of the message that generated this suggestion
+1. Uncomment the database code in `MessagesController#create`
+2. Run `rails db:create` and `rails db:migrate`
 
 ## Services
 
 ### OpenAiService
 
-Handles communication with OpenAI's API to generate suggestions.
+Handles communication with OpenAI's API to generate suggestions with chat context.
 
 **Key Features:**
 
 - Uses GPT-4o-mini model
+- Accepts chat context for better responses
+- Advanced incident response classification
 - Structured JSON responses
 - Error handling and logging
-- Configurable system prompts
 
 **Usage:**
 
 ```ruby
 service = OpenAiService.new
-suggestion = service.generate_suggestion("Database server down", 1)
+suggestion = service.generate_suggestion("Database server down", 1, chat_context)
 ```
 
-## Database Schema
+### SessionCacheService
 
-```sql
-CREATE TABLE suggestions (
-  id SERIAL PRIMARY KEY,
-  content VARCHAR NOT NULL,
-  kind VARCHAR NOT NULL,
-  reasoning TEXT,
-  message_index INTEGER NOT NULL,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
+Manages in-memory chat context per user.
 
-CREATE INDEX index_suggestions_on_message_index ON suggestions(message_index);
-CREATE INDEX index_suggestions_on_kind ON suggestions(kind);
+**Key Features:**
+
+- Per-user session storage
+- Add user and assistant messages
+- Retrieve and clear context
+- No database dependency
+
+**Usage:**
+
+```ruby
+# Add user message
+SessionCacheService.add_message(user_id, 'user', 'Server is down')
+
+# Get context
+context = SessionCacheService.get_context(user_id)
+
+# Clear context
+SessionCacheService.clear_context(user_id)
+```
+
+## Testing
+
+### Using curl
+
+```bash
+# Test POST /api/messages with session caching
+curl -X POST http://localhost:3000/api/messages \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Database server down", "index": 1, "user_id": "user123"}'
+
+# Get chat context
+curl "http://localhost:3000/api/messages/context?user_id=user123"
+
+# Clear chat context
+curl -X DELETE "http://localhost:3000/api/messages/context?user_id=user123"
+```
+
+### Using the test script
+
+```bash
+ruby test_session.rb
 ```
 
 ## Development
@@ -200,7 +304,7 @@ CREATE INDEX index_suggestions_on_kind ON suggestions(kind);
 rails test
 ```
 
-### Database Commands
+### Database Commands (if using database)
 
 ```bash
 rails db:create    # Create database
@@ -221,49 +325,7 @@ rails routes
 ruby setup.rb      # Interactive setup and testing
 ```
 
-## Testing the API
-
-### Using curl
-
-```bash
-# Test POST /api/messages
-curl -X POST http://localhost:3000/api/messages \
-  -H "Content-Type: application/json" \
-  -d '{"content": "Database server down", "index": 1}'
-
-# Test GET /api/suggestions
-curl http://localhost:3000/api/suggestions
-```
-
-### Using the setup script
-
-```bash
-ruby setup.rb
-```
-
 ## Troubleshooting
-
-### PostgreSQL Issues
-
-If you encounter PostgreSQL connection issues:
-
-1. **Install PostgreSQL**:
-
-   - Windows: Download from https://www.postgresql.org/download/windows/
-   - macOS: `brew install postgresql`
-   - Linux: `sudo apt-get install postgresql`
-
-2. **Start PostgreSQL service**:
-
-   - Windows: Start from Services
-   - macOS: `brew services start postgresql`
-   - Linux: `sudo systemctl start postgresql`
-
-3. **Create database user** (if needed):
-   ```sql
-   CREATE USER postgres WITH PASSWORD 'postgres';
-   ALTER USER postgres WITH SUPERUSER;
-   ```
 
 ### OpenAI API Issues
 
@@ -272,9 +334,15 @@ If you encounter PostgreSQL connection issues:
 - Verify the API key is set in your `.env` file
 - Test the connection using the setup script: `ruby setup.rb`
 
+### Session Caching Issues
+
+- **Context not persisting**: Check that you're using the same `user_id`
+- **Memory usage**: Context is stored in memory, restart server to clear all
+- **Multiple users**: Each `user_id` gets independent context
+
 ### Database Migration Issues
 
-If migrations fail:
+If you decide to re-enable database storage:
 
 1. **Reset the database**:
 
@@ -284,10 +352,7 @@ If migrations fail:
    rails db:migrate
    ```
 
-2. **Check PostgreSQL connection**:
-   ```bash
-   psql -h localhost -U postgres -d incident_management_development
-   ```
+2. **Uncomment database code** in `MessagesController#create`
 
 ## Contributing
 
