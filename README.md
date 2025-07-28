@@ -49,8 +49,6 @@ This assumes the Rails server is running on `http://localhost:3000`. You can con
   - Timeline Events
   - Follow-up Tasks (tasks to be done after the incident)
 
-Responses are categorized and rendered inline as each message appears.
-
 ---
 
 ## Decisions Made
