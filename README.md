@@ -38,14 +38,18 @@ This assumes the Rails server is running on `http://localhost:3000`. You can con
 
 ## How to Simulate the Replay
 
-The system simulates real-time incident replay by sequentially processing messages from a transcript. Each message is sent to the backend, which generates AI suggestions based on the content and chat context. The frontend displays messages and categorizes AI suggestions in real time, allowing you to observe how the assistant analyzes the incident step-by-step.
-
-**To simulate a replay:**
-
 - Ensure the backend server is running.
 - Start the frontend.
-- Use the UI to load a sample transcript or send messages manually.
+- Use the UI to play, pause, and restart the replay.
 - Watch messages appear on the left and suggestions update dynamically on the right.
+- The backend uses OpenAI to analyze the message for:
+  - Action Items
+  - Timeline Events
+  - Root Cause Signals
+  - Metadata Hints
+  - Follow-up Tasks (after the incident is over)
+
+Responses are categorized and rendered inline as each message appears.
 
 ---
 
